@@ -42,13 +42,13 @@ html {
   scroll-behavior: smooth;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--bg-color);
-  transition: background-color 0.3s ease;
+  
 }
 
 body {
   background-color: transparent;
   color: var(--text-color);
-  transition: color 0.3s ease;
+  
   line-height: 1.6;
 }
 
@@ -113,7 +113,7 @@ p {
   border: 1px solid var(--nav-border);
   border-radius: 9999px;
   z-index: 1000;
-  transition: background-color 0.3s ease;
+  
   color: var(--nav-text);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
@@ -297,17 +297,51 @@ p {
   display: none;
 }
 
+/* Loader */
+.loader-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-color);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loader-wrapper.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Scroll Reveal Animations */
 .reveal, .reveal-card {
   opacity: 0;
-  transform: translateY(80px) scale(0.96) translateZ(0);
+  transform: translateY(20px);
   will-change: opacity, transform;
-  transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1), transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .reveal.active, .reveal-card.active {
   opacity: 1;
-  transform: translateY(0) scale(1) translateZ(0);
+  transform: translateY(0);
 }
 
 /* Hero Layout */
@@ -544,5 +578,72 @@ footer {
 @media (max-width: 600px) {
   .certifications-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Update project-image to fit img tags */
+.project-image {
+  width: 100%;
+  height: 200px;
+  background-color: var(--card-bg-alt);
+  overflow: hidden;
+}
+
+.project-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+  display: block;
+}
+
+.project-card:hover .project-image img {
+  transform: scale(1.05);
+}
+
+/* Update contact links */
+a.contact-item {
+  text-decoration: none;
+  
+}
+
+a.contact-item:hover {
+  color: var(--primary);
+}
+
+a.contact-item:hover svg {
+  color: var(--primary);
+}
+
+.social-item {
+  transition: transform 0.3s ease;
+}
+
+.social-item:hover {
+  transform: translateY(-3px);
+}
+
+/* View Transitions for Circular Reveal Theme Toggle */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+  animation: reveal-theme 0.6s ease-in-out forwards;
+}
+
+@keyframes reveal-theme {
+  from {
+    clip-path: circle(0% at 50% 50%);
+  }
+  to {
+    clip-path: circle(150% at 50% 50%);
   }
 }

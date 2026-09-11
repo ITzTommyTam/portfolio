@@ -1,4 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // --- Force Scroll to Top ---
+  window.history.replaceState('', document.title, window.location.pathname);
+  window.scrollTo(0, 0);
+
+  // --- Page Loader & Reveal Initialization ---
+  window.addEventListener('load', () => {
+    window.scrollTo(0, 0); // Double ensure scroll to top on full load
+    const loader = document.getElementById('loader');
+    if (loader) {
+      loader.classList.add('fade-out');
+      initRevealObserver(); // Start revealing immediately while loader fades
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 300); // Wait for faster transition to finish
+    } else {
+      initRevealObserver();
+    }
+  });
+
+  function initRevealObserver() {
+    const revealElements = document.querySelectorAll('.reveal, .reveal-card');
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px"
+    });
+
+    revealElements.forEach(el => {
+      revealObserver.observe(el);
+    });
+  }
+
   // --- Dark Mode & Avatar Toggle ---
   const themeToggle = document.getElementById('theme-toggle');
   const moonIcon = document.getElementById('moon-icon');
@@ -21,22 +59,44 @@ document.addEventListener('DOMContentLoaded', () => {
     if (avatarImg) avatarImg.src = './dark.png';
   }
   
-  themeToggle.addEventListener('click', () => {
+  let isTransitioning = false;
+  themeToggle.addEventListener('click', (e) => {
+    if (isTransitioning) return;
+
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    if (newTheme === 'dark') {
-      moonIcon.classList.add('hidden');
-      sunIcon.classList.remove('hidden');
-      if (avatarImg) avatarImg.src = './dark.png';
-    } else {
-      moonIcon.classList.remove('hidden');
-      sunIcon.classList.add('hidden');
-      if (avatarImg) avatarImg.src = './square-crop.jpg';
+
+    const performThemeChange = () => {
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      if (newTheme === 'dark') {
+        moonIcon.classList.add('hidden');
+        sunIcon.classList.remove('hidden');
+        if (avatarImg) avatarImg.src = './dark.png';
+      } else {
+        moonIcon.classList.remove('hidden');
+        sunIcon.classList.add('hidden');
+        if (avatarImg) avatarImg.src = './square-crop.jpg';
+      }
+    };
+
+    // Fallback for browsers that don't support View Transitions
+    if (!document.startViewTransition) {
+      performThemeChange();
+      return;
     }
+
+    isTransitioning = true;
+
+    // Create the view transition
+    const transition = document.startViewTransition(() => {
+      performThemeChange();
+    });
+
+    transition.finished.finally(() => {
+      isTransitioning = false;
+    });
   });
 
   // --- Scroll Spy for Active Nav Link ---
@@ -117,26 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 30);
   }
 
-  // --- Scroll Reveal Animation ---
-  const revealElements = document.querySelectorAll('.reveal, .reveal-card');
-  
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('active');
-      } else {
-        // Remove class to animate again when scrolling up/down
-        entry.target.classList.remove('active');
-      }
-    });
-  }, {
-    threshold: 0,
-    rootMargin: "0px 0px -15% 0px"
-  });
 
-  revealElements.forEach(el => {
-    revealObserver.observe(el);
-  });
 
   // --- Canvas Particle Network (Spider lines effect) ---
   const canvas = document.getElementById('network-canvas');
@@ -144,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = canvas.getContext('2d');
     let width, height;
     let particles = [];
+    let comets = [];
     const mouse = { x: -1000, y: -1000, radius: 150 };
 
     let resizeTimer;
@@ -204,8 +246,64 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    class Comet {
+      constructor() {
+        this.reset();
+        // Initially push out of bounds so they trickle in randomly
+        this.x = width + 200; 
+      }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = -100;
+        this.length = Math.random() * 80 + 40;
+        this.vx = Math.random() * 2 + 1.5; // diagonal speed x
+        this.vy = Math.random() * 2 + 3;   // diagonal speed y
+        this.opacity = Math.random() * 0.5 + 0.1;
+        
+        // Randomly spawn from left edge sometimes
+        if (Math.random() > 0.5) {
+          this.x = -100;
+          this.y = Math.random() * height * 0.5; // Upper half
+        }
+      }
+      update() {
+        // If out of bounds
+        if (this.x > width + 200 || this.y > height + 200) {
+          // Low chance to spawn each frame to keep it sparse
+          if (Math.random() < 0.003) {
+            this.reset();
+          }
+        } else {
+          this.x += this.vx;
+          this.y += this.vy;
+        }
+      }
+      draw(isDark) {
+        if (this.x > width + 200 || this.y > height + 200) return;
+        
+        // Use black (0, 0, 0) in light mode, white in dark mode
+        const rgb = isDark ? '255, 255, 255' : '0, 0, 0';
+        
+        const tailX = this.x - this.vx * (this.length / 2);
+        const tailY = this.y - this.vy * (this.length / 2);
+        
+        const gradient = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+        gradient.addColorStop(0, `rgba(${rgb}, ${this.opacity})`);
+        gradient.addColorStop(1, `rgba(${rgb}, 0)`);
+        
+        ctx.beginPath();
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = isDark ? 2 : 3;
+        ctx.lineCap = 'round';
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(tailX, tailY);
+        ctx.stroke();
+      }
+    }
+
     function initParticles() {
       particles = [];
+      comets = [];
       const isMobile = window.innerWidth <= 768;
       const divisor = isMobile ? 18000 : 9000;
       const maxParticles = isMobile ? 40 : 120;
@@ -213,6 +311,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       for (let i = 0; i < numParticles; i++) {
         particles.push(new Particle());
+      }
+      
+      const numComets = isMobile ? 2 : 5;
+      for (let i = 0; i < numComets; i++) {
+        comets.push(new Comet());
       }
     }
 
@@ -264,6 +367,11 @@ document.addEventListener('DOMContentLoaded', () => {
           ctx.lineTo(mouse.x, mouse.y);
           ctx.stroke();
         }
+      }
+      
+      for (let i = 0; i < comets.length; i++) {
+        comets[i].update();
+        comets[i].draw(isDark);
       }
     }
 
