@@ -526,6 +526,10 @@ footer {
     font-size: 2.5rem;
   }
   
+  .reveal, .reveal-card {
+    transition-delay: 0ms !important;
+  }
+  
   .mobile-only {
     display: flex;
   }
