@@ -1,11 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Force Scroll to Top ---
-  window.history.replaceState('', document.title, window.location.pathname);
-  window.scrollTo(0, 0);
-
   // --- Page Loader & Reveal Initialization ---
   window.addEventListener('load', () => {
-    window.scrollTo(0, 0); // Double ensure scroll to top on full load
     const loader = document.getElementById('loader');
     if (loader) {
       loader.classList.add('fade-out');
@@ -28,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }, {
-      threshold: 0.1,
+      threshold: 0,
       rootMargin: "0px 0px -50px 0px"
     });
 
@@ -103,30 +98,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const sections = document.querySelectorAll('section');
   const navLinks = document.querySelectorAll('.nav-link');
 
+  let isScrolling = false;
   window.addEventListener('scroll', () => {
-    let current = '';
-    
-    sections.forEach(section => {
-      const sectionTop = section.offsetTop;
-      const sectionHeight = section.offsetHeight;
-      // Check if the current scroll position is within the section bounds
-      if (scrollY >= (sectionTop - window.innerHeight / 3) && scrollY < (sectionTop + sectionHeight - window.innerHeight / 3)) {
-        current = section.getAttribute('id');
-      }
-    });
+    if (!isScrolling) {
+      window.requestAnimationFrame(() => {
+        let current = '';
+        
+        sections.forEach(section => {
+          // Avoid triggering layout thrashing when possible
+          const sectionTop = section.offsetTop;
+          const sectionHeight = section.offsetHeight;
+          if (scrollY >= (sectionTop - window.innerHeight / 3) && scrollY < (sectionTop + sectionHeight - window.innerHeight / 3)) {
+            current = section.getAttribute('id');
+          }
+        });
 
-    // If we are at the bottom of the page, force 'contact'
-    if (Math.ceil(window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 100) {
-      current = 'contact';
+        if (Math.ceil(window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 100) {
+          current = 'contact';
+        }
+
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+          }
+        });
+        isScrolling = false;
+      });
+      isScrolling = true;
     }
-
-    navLinks.forEach(link => {
-      link.classList.remove('active');
-      if (link.getAttribute('href') === `#${current}`) {
-        link.classList.add('active');
-      }
-    });
-  });
+  }, { passive: true });
 
   // --- Mobile Menu Toggle ---
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -305,15 +306,15 @@ document.addEventListener('DOMContentLoaded', () => {
       particles = [];
       comets = [];
       const isMobile = window.innerWidth <= 768;
-      const divisor = isMobile ? 18000 : 9000;
-      const maxParticles = isMobile ? 40 : 120;
+      const divisor = isMobile ? 25000 : 9000;
+      const maxParticles = isMobile ? 25 : 120;
       const numParticles = Math.min(Math.floor((width * height) / divisor), maxParticles);
       
       for (let i = 0; i < numParticles; i++) {
         particles.push(new Particle());
       }
       
-      const numComets = isMobile ? 2 : 5;
+      const numComets = isMobile ? 1 : 5;
       for (let i = 0; i < numComets; i++) {
         comets.push(new Comet());
       }
@@ -339,12 +340,13 @@ document.addEventListener('DOMContentLoaded', () => {
         particles[i].draw(rgb);
         
         // Connect particles
-        for (let j = i; j < particles.length; j++) {
+        for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          const distSq = dx * dx + dy * dy;
           
-          if (distance < 100) {
+          if (distSq < 10000) { // 100 * 100
+            const distance = Math.sqrt(distSq);
             ctx.beginPath();
             ctx.strokeStyle = `rgba(${rgb}, ${0.15 - distance/666})`;
             ctx.lineWidth = 1;
@@ -357,9 +359,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Connect to mouse (spider effect)
         const dx = particles[i].x - mouse.x;
         const dy = particles[i].y - mouse.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const distSq = dx * dx + dy * dy;
         
-        if (distance < mouse.radius) {
+        if (distSq < mouse.radius * mouse.radius) {
+          const distance = Math.sqrt(distSq);
           ctx.beginPath();
           ctx.strokeStyle = `rgba(${rgb}, ${0.4 - distance/375})`;
           ctx.lineWidth = 1;
