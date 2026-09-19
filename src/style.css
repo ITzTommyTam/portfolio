@@ -242,7 +242,6 @@ p {
   position: absolute;
   bottom: calc(100% + 12px);
   left: 0;
-  transform: translate3d(0, 0, 0) scale(0.85);
   background: var(--nav-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -256,10 +255,12 @@ p {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s ease, transform 0.18s cubic-bezier(0.2, 0.9, 0.2, 1);
+  visibility: hidden;
   white-space: nowrap;
   z-index: 1010;
   will-change: transform, opacity;
+  transform: translate3d(var(--tooltip-x, 0px), 0, 0) scale(0.82);
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s ease;
 }
 
 .nav-tooltip::after {
@@ -275,6 +276,7 @@ p {
 
 .nav-tooltip.visible {
   opacity: 1;
+  visibility: visible;
   transform: translate3d(var(--tooltip-x, 0px), 0, 0) scale(1);
 }
 
@@ -309,6 +311,12 @@ p {
   object-fit: cover;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .nav-menu {
   display: flex;
   gap: 0.35rem;
@@ -319,18 +327,17 @@ p {
 /* Sliding active pill behind icons - 100% GPU transform */
 .nav-indicator-pill {
   position: absolute;
-  top: 50%;
+  top: 0;
   left: 0;
   width: 42px;
   height: 42px;
-  margin-top: -21px;
   border-radius: 9999px;
   background-color: var(--nav-active-bg);
   border: 1px solid var(--nav-active-border);
   pointer-events: none;
-  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.15s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s ease, height 0.2s ease, opacity 0.18s ease;
   transform: translate3d(0, 0, 0);
-  will-change: transform;
+  will-change: transform, width, height;
   opacity: 0;
   z-index: 0;
 }
@@ -354,7 +361,7 @@ p {
   border: 1px solid transparent;
   position: relative;
   z-index: 1;
-  transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.15s ease, color 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease, color 0.15s ease;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -750,7 +757,7 @@ footer {
   }
   
   .nav-menu {
-    position: static;
+    position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -764,6 +771,11 @@ footer {
     transform: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+
+  .nav-indicator-pill {
+    width: 38px;
+    height: 38px;
   }
   
   .nav-link {

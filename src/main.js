@@ -120,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function cacheNavGeometry() {
     if (!mainNavbar || !navMenu || navLinks.length === 0) return;
     const navbarRect = mainNavbar.getBoundingClientRect();
-    const menuRect = navMenu.getBoundingClientRect();
 
     cachedNavLinks = Array.from(navLinks).map(link => {
       const rect = link.getBoundingClientRect();
@@ -132,32 +131,45 @@ document.addEventListener('DOMContentLoaded', () => {
         targetId: isHash ? href.substring(1) : null,
         title: link.dataset.title || link.getAttribute('title') || 'Select',
         centerX: rect.left + rect.width / 2,
-        offsetInMenu: rect.left - menuRect.left,
+        offsetLeft: link.offsetLeft,
+        offsetTop: link.offsetTop,
         centerInNavbar: (rect.left + rect.width / 2) - navbarRect.left,
-        width: rect.width
+        width: link.offsetWidth || rect.width,
+        height: link.offsetHeight || rect.height
       };
     });
   }
 
   cacheNavGeometry();
-  window.addEventListener('resize', cacheNavGeometry);
-  window.addEventListener('load', cacheNavGeometry);
 
-  function updateIndicatorPill(offsetInMenu) {
-    if (!indicatorPill) return;
-    indicatorPill.style.transform = `translate3d(${offsetInMenu}px, 0, 0)`;
+  function updateIndicatorPill(item) {
+    if (!indicatorPill || !item) return;
+    indicatorPill.style.width = `${item.width}px`;
+    indicatorPill.style.height = `${item.height}px`;
+    indicatorPill.style.transform = `translate3d(${item.offsetLeft}px, ${item.offsetTop}px, 0)`;
     indicatorPill.classList.add('active');
   }
 
-  // Set initial pill position after layout settles
-  setTimeout(() => {
+  function syncNavGeometryInstant() {
     cacheNavGeometry();
     const activeLink = document.querySelector('.nav-link.active') || navLinks[0];
-    if (activeLink) {
+    if (activeLink && indicatorPill) {
       const found = cachedNavLinks.find(c => c.element === activeLink);
-      if (found) updateIndicatorPill(found.offsetInMenu);
+      if (found) {
+        indicatorPill.style.transition = 'none';
+        updateIndicatorPill(found);
+        void indicatorPill.offsetWidth;
+        indicatorPill.style.transition = '';
+      }
     }
-  }, 100);
+  }
+
+  window.addEventListener('resize', syncNavGeometryInstant);
+  window.addEventListener('orientationchange', syncNavGeometryInstant);
+  window.addEventListener('load', syncNavGeometryInstant);
+
+  // Set initial pill position after layout settles without transition snap
+  setTimeout(syncNavGeometryInstant, 100);
 
   let isScrollSpyThrottled = false;
   let isUserScrolling = false;
@@ -195,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         l.classList.remove('active');
       }
     });
-    updateIndicatorPill(linkItem.offsetInMenu);
+    updateIndicatorPill(linkItem);
   }
 
   window.addEventListener('scroll', () => {
@@ -264,15 +276,29 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Move sliding pill with 0 layout cost
-    updateIndicatorPill(item.offsetInMenu);
+    // Move sliding pill with fluid GPU momentum
+    updateIndicatorPill(item);
 
-    // Position iOS floating tooltip via GPU transform
+    // Position iOS floating tooltip bubble smoothly
     if (navTooltip && navTooltipText) {
       navTooltipText.textContent = item.title;
       const tooltipWidth = navTooltip.offsetWidth || 64;
       const tooltipX = Math.round(item.centerInNavbar - tooltipWidth / 2);
-      navTooltip.style.transform = `translate3d(${tooltipX}px, 0, 0) scale(1)`;
+
+      const isFirstPress = !navTooltip.classList.contains('visible');
+      if (isFirstPress) {
+        // Place bubble directly at target before fading in to prevent flying from previous position
+        navTooltip.style.transition = 'none';
+        navTooltip.style.setProperty('--tooltip-x', `${tooltipX}px`);
+        navTooltip.style.transform = `translate3d(${tooltipX}px, 0, 0) scale(0.82)`;
+        void navTooltip.offsetWidth; // Commit initial position
+        navTooltip.style.transition = '';
+      } else {
+        // Dragging/scrubbing across items: fluid glide
+        navTooltip.style.setProperty('--tooltip-x', `${tooltipX}px`);
+        navTooltip.style.transform = `translate3d(${tooltipX}px, 0, 0) scale(1)`;
+      }
+
       navTooltip.classList.add('visible');
     }
 
@@ -299,6 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (navTooltip) {
       navTooltip.classList.remove('visible');
+      const currentX = navTooltip.style.getPropertyValue('--tooltip-x') || '0px';
+      navTooltip.style.transform = `translate3d(${currentX}, 0, 0) scale(0.82)`;
     }
   }
 
