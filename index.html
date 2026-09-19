@@ -12,36 +12,52 @@
     <div id="loader" class="loader-wrapper">
       <div class="loader-spinner"></div>
     </div>
+    <!-- Ambient Background Blur Glows -->
+    <div class="bg-blur-container" aria-hidden="true">
+      <div class="bg-blur-blob bg-blur-blob-1"></div>
+      <div class="bg-blur-blob bg-blur-blob-2"></div>
+    </div>
     <canvas id="network-canvas"></canvas>
-    <nav class="navbar">
+    
+    <!-- Back to Top Button (Top-Right Screen) -->
+    <button id="back-to-top" class="back-to-top-btn" aria-label="Back to top" title="Back to top">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+    </button>
+
+    <nav class="navbar" id="main-navbar">
+      <!-- iOS style floating preview tooltip on hold / scrub -->
+      <div class="nav-tooltip" id="nav-tooltip" aria-hidden="true">
+        <span id="nav-tooltip-text">Home</span>
+      </div>
       <div class="nav-container">
         <a href="#home" class="logo">TommyCloud</a>
         <div class="nav-menu" id="nav-menu">
-          <a href="#home" class="nav-link active" aria-label="Home" title="Home">
+          <div class="nav-indicator-pill" id="nav-indicator-pill"></div>
+          <a href="#home" class="nav-link active" aria-label="Home" title="Home" data-title="Home">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </a>
-          <a href="#about" class="nav-link" aria-label="About" title="About">
+          <a href="#about" class="nav-link" aria-label="About" title="About" data-title="About">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </a>
-          <a href="#projects" class="nav-link" aria-label="Projects" title="Projects">
+          <a href="#projects" class="nav-link" aria-label="Projects" title="Projects" data-title="Projects">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-briefcase"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
           </a>
-          <a href="#certifications" class="nav-link" aria-label="Certifications" title="Certifications">
+          <a href="#certifications" class="nav-link" aria-label="Certifications" title="Certifications" data-title="Certifications">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-award"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
           </a>
-          <a href="#contact" class="nav-link" aria-label="Contact" title="Contact">
+          <a href="#contact" class="nav-link" aria-label="Contact" title="Contact" data-title="Contact">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           </a>
-          <a href="#" target="_blank" rel="noopener noreferrer" class="nav-link" aria-label="Google Drive" title="Google Drive">
+          <a href="#" target="_blank" rel="noopener noreferrer" class="nav-link" aria-label="Google Drive" title="Google Drive" data-title="Drive">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hard-drive"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg>
           </a>
         </div>
         <div class="nav-actions">
-          <button id="theme-toggle" class="btn btn-icon rounded-btn" aria-label="Toggle dark mode">
+          <button id="theme-toggle" class="btn btn-icon rounded-btn" aria-label="Toggle dark mode" data-title="Theme">
             <svg id="moon-icon" class="theme-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
             <svg id="sun-icon" class="theme-icon hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
           </button>
-          <button id="mobile-menu-btn" class="btn btn-icon rounded-btn mobile-only" aria-label="Menu">
+          <button id="mobile-menu-btn" class="btn btn-icon rounded-btn mobile-only" aria-label="Menu" data-title="Menu">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>
           </button>
         </div>
@@ -169,12 +185,12 @@
         </div>
       </section>
 
-      <section id="contact" class="contact reveal">
+      <section id="contact" class="contact">
         <div class="container">
-          <h2>Contact Information</h2>
-          <p>Interested in working together? Here is how you can reach me:</p>
+          <h2 class="reveal">Contact Information</h2>
+          <p class="reveal" style="transition-delay: 100ms;">Interested in working together? Here is how you can reach me:</p>
           
-          <div class="contact-info">
+          <div class="contact-info reveal" style="transition-delay: 200ms;">
             <!-- Email -->
             <a href="mailto:tamdayne2009@gmail.com" class="contact-item">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
