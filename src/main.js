@@ -56,7 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   let isTransitioning = false;
+  themeToggle.addEventListener('touchstart', (e) => {
+    e.stopPropagation();
+  }, { passive: true });
+
   themeToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
     if (isTransitioning) return;
 
     const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -346,10 +351,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return closest;
   }
 
-  if (mainNavbar && navMenu) {
-    // Touch Events for iPhone hold-and-slide
-    mainNavbar.addEventListener('touchstart', (e) => {
+  if (navMenu) {
+    // Touch Events for iPhone hold-and-slide - strictly for nav-links inside navMenu
+    navMenu.addEventListener('touchstart', (e) => {
       if (e.touches.length !== 1) return;
+      // Disregard any touch that is not on or inside a nav-link
+      if (!e.target.closest('.nav-link')) return;
+
       cacheNavGeometry(); // Refresh coordinates once at start of touch
       isHoldingNav = true;
 
@@ -360,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, { passive: true });
 
-    mainNavbar.addEventListener('touchmove', (e) => {
+    navMenu.addEventListener('touchmove', (e) => {
       if (!isHoldingNav || e.touches.length !== 1) return;
       const touch = e.touches[0];
 
@@ -376,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
 
     function handleTouchEnd() {
+      if (!isHoldingNav) return;
       if (currentHeldItem) {
         if (currentHeldItem.targetId) {
           scrollToSection(currentHeldItem.targetId);
@@ -386,8 +395,11 @@ document.addEventListener('DOMContentLoaded', () => {
       clearHeldState();
     }
 
-    mainNavbar.addEventListener('touchend', handleTouchEnd);
-    mainNavbar.addEventListener('touchcancel', handleTouchEnd);
+    navMenu.addEventListener('touchend', handleTouchEnd);
+    navMenu.addEventListener('touchcancel', handleTouchEnd);
+    window.addEventListener('touchend', () => {
+      if (isHoldingNav) handleTouchEnd();
+    }, { passive: true });
 
     // Click handler for standard instant clicks
     navLinks.forEach(link => {
@@ -429,7 +441,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Mobile Menu Toggle ---
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   if (mobileMenuBtn) {
-    mobileMenuBtn.addEventListener('click', () => {
+    mobileMenuBtn.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+    }, { passive: true });
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       navMenu.classList.toggle('active');
     });
   }
